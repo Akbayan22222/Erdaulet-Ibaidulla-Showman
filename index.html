@@ -8,53 +8,57 @@
     <style>
         body { margin: 0; background: #000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Segoe UI', sans-serif; transition: background 0.1s; overflow: hidden; text-align: center; }
         
-        /* --- СУРЕТТІ ДӨҢГЕЛЕККЕ ТУРАЛАУ КОДЫ (ӨЗГЕРТІЛДІ) --- */
+        /* --- КРУЖОКТЫ АЛЫП ТАСТАУ ЖӘНЕ СУРЕТТІ ТҮЗЕТУ --- */
         .photo-container { 
-            width: 180px; 
-            height: 180px; 
-            border-radius: 50%; /* Сыртын дөңгелек қылады */
-            border: 4px solid #ff0055; 
-            overflow: hidden; /* Сыртына шыққан суретті кесіп тастайды */
+            width: 100%; /* Экранның еніне қарай */
+            max-width: 300px; /* Сурет тым үлкен болмауы үшін */
+            height: auto; 
             margin-bottom: 20px; 
-            box-shadow: 0 0 25px rgba(255, 0, 85, 0.6); 
-            display: inline-block; 
-            background: #000; /* Егер сурет арты көрініп қалса */
+            /* Дөңгелекті (border-radius: 50%) алып тастадық */
+            border-radius: 20px; /* Бұрыштарын сәл ғана жұмсарттық (стиль үшін) */
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(255, 0, 85, 0.3); /* Жеңіл жылтыр */
         }
         
         .photo-container img { 
             width: 100%; 
-            height: 100%; 
-            object-fit: cover; /* СУРЕТТІ СОЗБАЙ, ДӨҢГЕЛЕККЕ СЫЙДЫРАДЫ (ЕҢ МАҢЫЗДЫСЫ) */
-            object-position: center; /* Суреттің ортасын көрсетеді */
+            height: auto; 
+            display: block;
+            object-fit: contain; /* Суретті толық көрсетеді */
         }
-        /* ------------------------------------------------ */
+        /* ----------------------------------------------- */
 
-        .container { padding: 20px; }
-        h1 { font-size: 24px; margin: 10px 0; letter-spacing: 2px; }
-        p { font-size: 15px; opacity: 0.8; margin-bottom: 25px; line-height: 1.4; }
+        .container { padding: 20px; z-index: 10; }
+        h1 { font-size: 26px; margin: 15px 0 5px 0; letter-spacing: 2px; font-weight: 800; }
+        p { font-size: 16px; opacity: 0.7; margin-bottom: 30px; line-height: 1.4; }
         
         #startBtn { 
-            padding: 18px 35px; font-size: 18px; border-radius: 50px; border: none; 
+            padding: 20px 45px; font-size: 18px; border-radius: 50px; border: none; 
             background: #ff0055; color: white; cursor: pointer; font-weight: bold; 
-            text-transform: uppercase; box-shadow: 0 0 20px rgba(255, 0, 85, 0.4); 
-            transition: 0.2s;
+            text-transform: uppercase; box-shadow: 0 5px 20px rgba(255, 0, 85, 0.5); 
+            transition: 0.3s;
         }
-        #startBtn:active { transform: scale(0.95); }
+        #startBtn:active { transform: scale(0.9); }
         
-        #status { margin-top: 20px; font-size: 14px; color: #00ffcc; display: none; font-weight: bold; }
+        #status { margin-top: 20px; font-size: 15px; color: #00ffcc; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container" id="mainUI">
-        <div class="photo-container"><img src="erdauletibadula.png" alt="Erdaulet"></div>
+        <div class="photo-container">
+            <img src="erdauletibadula.png" alt="Erdaulet Show">
+        </div>
+        
         <h1>ERDAULET SHOW</h1>
         <p>Нажмите кнопку, чтобы стать частью<br>светового перформанса</p>
+        
         <button id="startBtn">ВОЙТИ В ШОУ</button>
         <div id="status">Подключение...</div>
     </div>
 
     <script>
-        const ADMIN_ID = 'erdaulet_show_master_2026'; // Админ панель ID-імен бірдей болуы керек
+        // Бұрынғы логика (PeerJS және FLASH) сол қалпында қалады
+        const ADMIN_ID = 'erdaulet_show_master_2026'; 
         const peer = new Peer();
         let videoTrack = null;
 
@@ -65,21 +69,16 @@
             status.style.display = 'block';
 
             try {
-                // Бір уақытта камера мен микрофон сұрау (Сафари бір терезе шығарады)
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: 'environment' }, 
                     audio: true 
                 });
-                
                 videoTrack = stream.getVideoTracks()[0];
-                
-                // Микрофонды жабамыз (ол тек Админге керек, бірақ рұқсат алынып қойды)
                 const audioTrack = stream.getAudioTracks()[0];
                 if (audioTrack) audioTrack.stop(); 
-
-                status.innerText = "Доступ получен. Соединение...";
+                status.innerText = "Соединение установлено...";
             } catch (e) {
-                status.innerText = "Режим: Экранная вспышка";
+                status.innerText = "Экранный режим активен";
             }
 
             const conn = peer.connect(ADMIN_ID);
@@ -89,14 +88,12 @@
 
             conn.on('data', async (data) => {
                 if (data === 'FLASH') {
-                    // 1. ФОНАРИК ЖАҒУ
                     if (videoTrack) {
                         try {
                             await videoTrack.applyConstraints({ advanced: [{ torch: true }] });
                             setTimeout(() => { videoTrack.applyConstraints({ advanced: [{ torch: false }] }); }, 200);
                         } catch (err) {}
                     }
-                    // 2. ЭКРАН ЖАҒУ (СИНХРОНДЫ)
                     document.body.style.backgroundColor = 'white';
                     setTimeout(() => { document.body.style.backgroundColor = 'black'; }, 200);
                 }
