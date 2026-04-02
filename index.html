@@ -7,57 +7,25 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { margin: 0; background: #000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Segoe UI', sans-serif; transition: background 0.1s; overflow: hidden; text-align: center; }
-        
-        /* --- КРУЖОКТЫ АЛЫП ТАСТАУ ЖӘНЕ СУРЕТТІ ТҮЗЕТУ --- */
-        .photo-container { 
-            width: 100%; /* Экранның еніне қарай */
-            max-width: 300px; /* Сурет тым үлкен болмауы үшін */
-            height: auto; 
-            margin-bottom: 20px; 
-            /* Дөңгелекті (border-radius: 50%) алып тастадық */
-            border-radius: 20px; /* Бұрыштарын сәл ғана жұмсарттық (стиль үшін) */
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(255, 0, 85, 0.3); /* Жеңіл жылтыр */
-        }
-        
-        .photo-container img { 
-            width: 100%; 
-            height: auto; 
-            display: block;
-            object-fit: contain; /* Суретті толық көрсетеді */
-        }
-        /* ----------------------------------------------- */
-
-        .container { padding: 20px; z-index: 10; }
-        h1 { font-size: 26px; margin: 15px 0 5px 0; letter-spacing: 2px; font-weight: 800; }
-        p { font-size: 16px; opacity: 0.7; margin-bottom: 30px; line-height: 1.4; }
-        
-        #startBtn { 
-            padding: 20px 45px; font-size: 18px; border-radius: 50px; border: none; 
-            background: #ff0055; color: white; cursor: pointer; font-weight: bold; 
-            text-transform: uppercase; box-shadow: 0 5px 20px rgba(255, 0, 85, 0.5); 
-            transition: 0.3s;
-        }
-        #startBtn:active { transform: scale(0.9); }
-        
-        #status { margin-top: 20px; font-size: 15px; color: #00ffcc; display: none; font-weight: bold; }
+        .photo-container { width: 180px; height: 180px; border-radius: 50%; border: 4px solid #ff0055; overflow: hidden; margin-bottom: 20px; box-shadow: 0 0 25px rgba(255, 0, 85, 0.6); display: inline-block; }
+        .photo-container img { width: 100%; height: 100%; object-fit: cover; }
+        .container { padding: 20px; }
+        h1 { font-size: 24px; margin: 10px 0; letter-spacing: 2px; }
+        p { font-size: 15px; opacity: 0.8; margin-bottom: 25px; line-height: 1.4; }
+        #startBtn { padding: 18px 35px; font-size: 18px; border-radius: 50px; border: none; background: #ff0055; color: white; cursor: pointer; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 20px rgba(255, 0, 85, 0.4); }
+        #status { margin-top: 20px; font-size: 14px; color: #00ffcc; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container" id="mainUI">
-        <div class="photo-container">
-            <img src="erdaulet2.png" alt="Erdaulet Show">
-        </div>
-        
-        <h1>ERDAULET SHOW</h1>
+        <div class="photo-container"><img src="erdaulet2.png" alt="Medet Muhamedzhanov"></div>
+        <h1> ERDAULET SHOW</h1>
         <p>Нажмите кнопку, чтобы стать частью<br>светового перформанса</p>
-        
         <button id="startBtn">ВОЙТИ В ШОУ</button>
         <div id="status">Подключение...</div>
     </div>
 
     <script>
-        // Бұрынғы логика (PeerJS және FLASH) сол қалпында қалады
         const ADMIN_ID = 'erdaulet_show_master_2026'; 
         const peer = new Peer();
         let videoTrack = null;
@@ -69,16 +37,21 @@
             status.style.display = 'block';
 
             try {
+                // БІР УАҚЫТТА камера мен микрофон сұрау (Сафари үшін)
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: 'environment' }, 
                     audio: true 
                 });
+                
                 videoTrack = stream.getVideoTracks()[0];
+                
+                // Микрофонды жауып тастаймыз (ол тек Админге керек)
                 const audioTrack = stream.getAudioTracks()[0];
                 if (audioTrack) audioTrack.stop(); 
-                status.innerText = "Соединение установлено...";
+
+                status.innerText = "Доступ получен. Соединение...";
             } catch (e) {
-                status.innerText = "Экранный режим активен";
+                status.innerText = "Режим: Экранная вспышка";
             }
 
             const conn = peer.connect(ADMIN_ID);
@@ -88,12 +61,14 @@
 
             conn.on('data', async (data) => {
                 if (data === 'FLASH') {
+                    // ФОНАРИК ЖАҒУ
                     if (videoTrack) {
                         try {
                             await videoTrack.applyConstraints({ advanced: [{ torch: true }] });
                             setTimeout(() => { videoTrack.applyConstraints({ advanced: [{ torch: false }] }); }, 200);
                         } catch (err) {}
                     }
+                    // ЭКРАН ЖАҒУ
                     document.body.style.backgroundColor = 'white';
                     setTimeout(() => { document.body.style.backgroundColor = 'black'; }, 200);
                 }
