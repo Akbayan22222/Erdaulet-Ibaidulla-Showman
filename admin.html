@@ -51,7 +51,6 @@
                 document.getElementById('beatBtn').innerText = "ВКЛЮЧИТЬ АВТО-БИТ";
                 return;
             }
-
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -60,34 +59,32 @@
                 source.connect(analyser);
                 analyser.fftSize = 256;
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
-                
                 isBeatMode = true;
                 document.getElementById('beatBtn').classList.add('active-beat');
                 document.getElementById('beatBtn').innerText = "СЛУШАЮ МУЗЫКУ...";
                 detectBeat();
-            } catch (err) {
-                alert("Микрофонға рұқсат беріңіз!");
-            }
+            } catch (err) { alert("Разрешите микрофон!"); }
         }
 
         function detectBeat() {
             if (!isBeatMode) return;
             analyser.getByteFrequencyData(dataArray);
-            
-            // Тек басс жиіліктерін тексереміз (0-4 индекс)
             let sum = 0;
             for (let i = 0; i < 4; i++) sum += dataArray[i]; 
             let avg = sum / 4;
 
-            // Сезімталдық 165 - бұл өте жақсы көрсеткіш
-            if (avg > 165) { 
+            if (avg > 160) { 
                 sendFlash();
-                // 150ms кідіріс - фонариктер тым жиі (стробоскоп сияқты) болмауы үшін
-                setTimeout(detectBeat, 150); 
+                setTimeout(detectBeat, 180); 
             } else {
                 requestAnimationFrame(detectBeat);
             }
         }
+
+        // Keep connection alive for Android
+        setInterval(() => {
+            connections.forEach(conn => { if (conn.open) conn.send('PING'); });
+        }, 4000);
     </script>
 </body>
 </html>
