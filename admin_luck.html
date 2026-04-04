@@ -1,50 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Lottery Control</title>
+    <title>ERDAULET SHOW - ADMIN</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { 
+            background: #1a1a1a; color: white; font-family: sans-serif; 
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; height: 100vh; margin: 0; 
+        }
+        h1 { color: #ff0055; text-shadow: 0 0 10px rgba(255,0,85,0.3); }
+        #status { margin-bottom: 25px; color: gold; font-weight: bold; font-size: 18px; }
+        .btn-spin { 
+            width: 90%; height: 160px; 
+            background: linear-gradient(45deg, #ff0055, #ff5500); 
+            font-size: 30px; font-weight: bold; color: white;
+            border-radius: 30px; border: none; cursor: pointer; 
+            box-shadow: 0 10px 25px rgba(255, 0, 85, 0.4);
+            transition: 0.2s;
+        }
+        .btn-spin:active { transform: scale(0.95); box-shadow: 0 5px 10px rgba(0,0,0,0.5); }
+    </style>
 </head>
-<body style="background:#1a1a1a; color:white; text-align:center; font-family:sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; margin:0">
+<body>
     
-    <h1>УПРАВЛЕНИЕ ЛОТЕРЕЕЙ</h1>
-    <div id="status" style="margin-bottom:20px; color:gold">Ожидание подключения экрана...</div>
+    <h1>ERDAULET IBADULLA</h1>
+    <div id="status">ИЩУ ЭКРАН ЛОТЕРЕИ...</div>
     
-    <button style="width:90%; height:150px; background:linear-gradient(gold, orange); font-size:30px; font-weight:bold; border-radius:25px; border:none; cursor:pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5)" onclick="spin()">🎰 КРУТИТЬ БАРАБАН 🎰</button>
+    <button class="btn-spin" onclick="spin()">🎰 КРУТИТЬ БАРАБАН 🎰</button>
 
     <script>
-        const MY_ADMIN_ID = 'medet_luck_2026'; // Бұл Админнің тұрақты аты
-        const peer = new Peer(MY_ADMIN_ID); // Осы атпен тіркелеміз
-        let connections = [];
+        // ЛЭД Экранның ID-і (Осы ID лотерея бетінде де болуы керек)
+        const TARGET_ID = 'erdaulet_luck_2026'; 
+        
+        // Peer-ді ID-сіз ашамыз (автоматты кездейсоқ ID алады), сонда "ID занят" қатесі болмайды
+        const peer = new Peer(); 
+        let conn = null;
 
-        // Экран қосылғанда оны тізімге сақтаймыз
-        peer.on('connection', (conn) => {
+        // Экранға қосылу функциясы
+        function connectToScreen() {
+            if (conn) conn.close();
+            
+            // Лотерея экранына қосылуға тырысамыз
+            conn = peer.connect(TARGET_ID);
+            
             conn.on('open', () => {
-                connections.push(conn);
                 document.getElementById('status').innerText = "ЭКРАН ПОДКЛЮЧЕН! ✅";
                 document.getElementById('status').style.color = "#00ffcc";
             });
-        });
+
+            conn.on('close', () => {
+                document.getElementById('status').innerText = "СВЯЗЬ ПОТЕРЯНА. ИЩУ ЭКРАН...";
+                document.getElementById('status').style.color = "gold";
+                setTimeout(connectToScreen, 3000); // Байланыс үзілсе қайта қосылу
+            });
+        }
 
         function spin() {
-            if (connections.length === 0) {
-                alert("Ошибка: Экран лотереи не открыт или не подключен!");
-                return;
+            if (conn && conn.open) {
+                conn.send({ start: true });
+                document.getElementById('status').innerText = "БАРАБАН ЗАПУЩЕН! 🎰";
+                setTimeout(() => {
+                    document.getElementById('status').innerText = "ЭКРАН ПОДКЛЮЧЕН! ✅";
+                }, 2000);
+            } else {
+                alert("Ошибка: Экран лотереи не найден! Сначала откройте экран на ноутбуке.");
+                connectToScreen();
             }
-            // Барлық қосылған экрандарға "баста" командасын жіберу
-            connections.forEach(conn => {
-                if (conn.open) {
-                    conn.send({ start: true });
-                }
-            });
-            console.log("Команда на запуск отправлена!");
         }
+
+        // Бет ашылғанда бірден қосылуды бастаймыз
+        peer.on('open', () => {
+            connectToScreen();
+        });
 
         peer.on('error', (err) => {
             console.error("PeerJS Error:", err);
-            if (err.type === 'unavailable-id') {
-                alert("Этот ID уже занят! Возможно, админка открыта в другой вкладке.");
-            }
         });
     </script>
 </body>
