@@ -2,56 +2,81 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>LOTTERY SCREEN</title>
+    <title>ERDAULET SHOW: SCREEN</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { background: #000; color: #fff; font-family: 'Arial Black', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        #winner-photo { width: 350px; height: 350px; border-radius: 50%; border: 15px solid gold; box-shadow: 0 0 50px gold; object-fit: cover; display: none; }
-        #winner-name { font-size: 80px; color: gold; margin-top: 20px; text-shadow: 0 0 30px gold; }
+        body { background: #000; color: #fff; font-family: 'Arial Black', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100vh; width: 100vw; overflow: hidden; }
+        #branding { position: absolute; top: 25px; left: 25px; text-align: left; z-index: 100; }
+        #branding h1 { font-size: 35px; margin: 0; color: #fff; text-transform: uppercase; text-shadow: 0 0 20px #ff0055; }
+        #guests-strip { position: absolute; top: 100px; left: 20px; right: 20px; height: 110px; display: flex; align-items: center; gap: 12px; overflow-x: auto; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 20px; }
+        .strip-photo { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #ff0055; object-fit: cover; animation: fadeIn 0.5s; }
+        #winner-card { text-align: center; display: none; z-index: 200; position: relative; margin-bottom: 8vh; }
+        #winner-photo { width: 380px; height: 380px; border-radius: 50%; border: 15px solid gold; box-shadow: 0 0 80px gold; object-fit: cover; }
+        #winner-name { font-size: 90px; color: gold; margin-top: 20px; text-shadow: 0 0 40px gold; text-transform: uppercase; }
+        @keyframes fadeIn { from { transform: scale(0); } to { transform: scale(1); } }
+        .flash-win { animation: fl 0.3s infinite alternate; }
+        @keyframes fl { from { opacity: 1; transform: scale(1); } to { opacity: 0.8; transform: scale(1.05); } }
     </style>
 </head>
 <body>
-    <div id="branding" style="position:absolute; top:20px; left:20px;">
-        <h1 style="color:#ff0055; margin:0;">ERDAULET SHOW</h1>
+    <div id="branding">
+        <h1>ERDAULET IBADULLA SHOW</h1>
+        <p style="color: gold; margin: 5px 0 0 0;">КТО СЧАСТЛИВЫЙ ГОСТЬ?</p>
     </div>
-    
+
+    <div id="guests-strip"></div>
+
     <div id="winner-card">
+        <h2 style="font-size: 40px; color: white; margin-bottom: 10px;">ПОБЕДИТЕЛЬ!</h2>
         <img id="winner-photo" src="">
-        <div id="winner-name">ОЖИДАНИЕ...</div>
+        <div id="winner-name"></div>
     </div>
 
     <script>
-        const MY_ID = 'erdaulet_luck_2026';
-        const peer = new Peer(MY_ID); // БҰЛ ЖЕРДЕ ID МІНДЕТТІ ТҮРДЕ КЕРЕК
+        const SCREEN_ID = 'erdaulet_luck_2026';
+        const peer = new Peer(SCREEN_ID);
         let guests = [];
 
-        peer.on('open', () => console.log("Экран готов... ID: " + MY_ID));
+        peer.on('open', () => console.log("Экран SAKEN SHOW дайын... ID: " + SCREEN_ID));
 
         peer.on('connection', (conn) => {
             conn.on('data', (data) => {
-                // Қонақ тіркелгенде
-                if (data.name && data.photo) {
+                // Қонақ тіркелгенде (Фото келгенде)
+                if (data.photo) {
                     guests.push(data);
-                    console.log("Новый гость: " + data.name);
+                    const img = document.createElement('img');
+                    img.src = data.photo;
+                    img.className = 'strip-photo';
+                    document.getElementById('guests-strip').appendChild(img);
+                    document.getElementById('guests-strip').scrollLeft = document.getElementById('guests-strip').scrollWidth;
                 }
-                // Админ "Старт" бергенде
-                if (data.start) startSpin();
+                // Админ команда жібергенде
+                if (data.type === 'SPIN') {
+                    startLottery();
+                }
             });
         });
 
-        function startSpin() {
-            if (guests.length === 0) return alert("Гостей нет!");
+        function startLottery() {
+            if (guests.length === 0) return alert("Гостей еще нет!");
+            const card = document.getElementById('winner-card');
             const photo = document.getElementById('winner-photo');
             const nameDiv = document.getElementById('winner-name');
-            photo.style.display = "block";
+            
+            card.style.display = "block";
+            card.classList.remove('flash-win');
             
             let timer = 0;
             let interval = setInterval(() => {
-                let g = guests[Math.floor(Math.random() * guests.length)];
-                photo.src = g.photo;
-                nameDiv.innerText = g.name;
+                let randomGuest = guests[Math.floor(Math.random() * guests.length)];
+                photo.src = randomGuest.photo;
+                nameDiv.innerText = randomGuest.name;
                 timer += 100;
-                if (timer > 4000) { clearInterval(interval); nameDiv.style.color = "#00ffcc"; }
+                
+                if (timer > 4500) { 
+                    clearInterval(interval);
+                    card.classList.add('flash-win');
+                }
             }, 100);
         }
     </script>
