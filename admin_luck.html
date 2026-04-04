@@ -6,51 +6,44 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        h1 { color: #ff0055; }
-        #status { margin-bottom: 25px; color: gold; font-weight: bold; font-size: 18px; }
-        .btn-spin { 
-            width: 90%; height: 160px; background: linear-gradient(45deg, #ff0055, #ff5500); 
-            font-size: 30px; font-weight: bold; color: white; border-radius: 30px; border: none; cursor: pointer; 
-            box-shadow: 0 10px 25px rgba(255, 0, 85, 0.4); 
-        }
+        button { width: 90%; height: 150px; background: #ff0055; color: white; font-size: 30px; font-weight: bold; border-radius: 30px; border: none; cursor: pointer; box-shadow: 0 10px 25px rgba(255, 0, 85, 0.4); }
+        #status { margin-top: 20px; color: gold; font-weight: bold; }
     </style>
 </head>
 <body>
     <h1>ERDAULET SHOW</h1>
-    <div id="status">ПОИСК ЭКРАНА...</div>
-    <button class="btn-spin" onclick="spin()">🎰 КРУТИТЬ БАРАБАН 🎰</button>
+    <div id="status">ПОДКЛЮЧЕНИЕ...</div>
+    <button onclick="sendSpin()">🎰 КРУТИТЬ БАРАБАН 🎰</button>
 
     <script>
-        const TARGET_ID = 'erdaulet_luck_2026'; // Экранның ID-імен бірдей болуы шарт
-        const peer = new Peer(); // ID БОС БОЛУЫ КЕРЕК!
+        const TARGET_ID = 'erdaulet_luck_2026'; 
+        const peer = new Peer(); // ID бос болсын
         let conn = null;
 
-        function connectToScreen() {
-            if (conn) conn.close();
+        function connect() {
             conn = peer.connect(TARGET_ID);
-            
             conn.on('open', () => {
                 document.getElementById('status').innerText = "ЭКРАН ПОДКЛЮЧЕН! ✅";
                 document.getElementById('status').style.color = "#00ffcc";
             });
-
             conn.on('close', () => {
-                document.getElementById('status').innerText = "СВЯЗЬ ПОТЕРЯНА. ИЩУ ЭКРАН...";
-                setTimeout(connectToScreen, 3000);
+                document.getElementById('status').innerText = "ПОИСК ЭКРАНА...";
+                setTimeout(connect, 3000);
             });
         }
 
-        function spin() {
+        function sendSpin() {
             if (conn && conn.open) {
-                conn.send({ start: true });
-                document.getElementById('status').innerText = "КОМАНДА ОТПРАВЛЕНА! 🎰";
+                // МАҢЫЗДЫ: Типі 'SPIN' болуы керек
+                conn.send({ type: 'SPIN' });
+                document.getElementById('status').innerText = "КОМАНДА ОТПРАВЛЕНА!";
             } else {
-                alert("Ошибка: Экран не найден!");
-                connectToScreen();
+                alert("Экран не найден! Попробуйте еще раз через 2 сек.");
+                connect();
             }
         }
 
-        peer.on('open', connectToScreen);
+        peer.on('open', connect);
     </script>
 </body>
 </html>
