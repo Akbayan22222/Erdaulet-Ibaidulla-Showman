@@ -2,56 +2,152 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>РЕГИСТРАЦИЯ - ERDAULET SHOW</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
-        .box { border: 2px solid #ff0055; border-radius: 20px; padding: 20px; background: #111; max-width: 400px; margin: auto; }
-        input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 18px; }
-        #photo-preview { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; display: none; margin: 10px auto; border: 3px solid #ff0055; }
-        button { background: #ff0055; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-size: 18px; font-weight: bold; width: 100%; cursor: pointer; }
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: -apple-system, sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+            margin: 0;
+        }
+        .box { 
+            border: 2px solid #ff0055; 
+            border-radius: 25px; 
+            padding: 30px 20px; 
+            background: #111; 
+            max-width: 400px; 
+            margin: 20px auto;
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.2);
+        }
+        h2 { color: #ff0055; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        p { opacity: 0.8; font-size: 14px; margin-bottom: 20px; }
+        
+        input[type="text"] { 
+            width: 90%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 12px; 
+            border: 1px solid #333; 
+            background: #222; 
+            color: white; 
+            font-size: 18px; 
+        }
+        
+        #photo-preview { 
+            width: 180px; 
+            height: 180px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            display: none; 
+            margin: 20px auto; 
+            border: 4px solid #ff0055; 
+            box-shadow: 0 0 15px #ff0055;
+        }
+        
+        .btn-photo { 
+            background: #fff; 
+            color: #000; 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 50px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            width: 90%; 
+            cursor: pointer; 
+            margin-bottom: 10px;
+        }
+        
+        .btn-send { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 18px 30px; 
+            border-radius: 50px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            width: 90%; 
+            display: none; 
+            cursor: pointer; 
+            margin-top: 10px;
+        }
+
+        #status { 
+            color: #00ffcc; 
+            margin-top: 30px; 
+            display: none; 
+            font-size: 20px; 
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
+
     <div class="box" id="reg-form">
-        <h2 style="color:#ff0055">ERDAULET IBADULLA SHOW</h2>
-        <p>Сделайте фото для участия в розыгрыше</p>
-        <input type="text" id="userName" placeholder="Ваше Имя">
+        <h2>ERDAULET IBADULLA</h2>
+        <p>Сделайте фото и введите имя для участия в розыгрыше!</p>
+        
+        <input type="text" id="userName" placeholder="Ваше Имя" autocomplete="off">
+        
         <input type="file" id="userPhoto" accept="image/*" capture="user" style="display:none">
-        <button onclick="document.getElementById('userPhoto').click()">📸 СДЕЛАТЬ ФОТО</button>
-        <img id="photo-preview">
-        <br><br>
-        <button id="sendBtn" style="background: #007bff; color: white; display:none" onclick="sendData()">УЧАСТВОВАТЬ</button>
+        
+        <button class="btn-photo" onclick="document.getElementById('userPhoto').click()">📸 СДЕЛАТЬ ФОТО</button>
+        
+        <img id="photo-preview" src="">
+        
+        <br>
+        <button id="sendBtn" class="btn-send" onclick="sendData()">ОТПРАВИТЬ ЕРДАУЛЕТУ 🚀</button>
     </div>
-    <div id="status" style="display:none; color:#00ffcc; font-weight:bold; margin-top:20px;">ВЫ В СПИСКЕ! ЖДИТЕ РОЗЫГРЫША 🎁</div>
+
+    <div id="status">✅ ВЫ В СПИСКЕ ЕРДАУЛЕТА!<br>ЖДИТЕ РОЗЫГРЫША 🎁</div>
 
     <script>
-        const TARGET_ID = 'erdaulet_luck_2026'; // Лотерея экранының ID-і
+        // МАҢЫЗДЫ: Бұл ID screen_luck.html-дегі ID-мен бірдей ('erdaulet_luck_2026')
+        const TARGET_SCREEN_ID = 'erdaulet_luck_2026'; 
+        
         const peer = new Peer(); 
-
         let photoBase64 = "";
 
         document.getElementById('userPhoto').onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function() {
                 photoBase64 = reader.result;
                 const img = document.getElementById('photo-preview');
-                img.src = photoBase64; img.style.display = "block";
+                img.src = photoBase64;
+                img.style.display = "block";
                 document.getElementById('sendBtn').style.display = "block";
             };
-            reader.readAsDataURL(e.target.files[0]);
+            reader.readAsDataURL(file);
         };
 
         function sendData() {
-            const name = document.getElementById('userName').value;
+            const name = document.getElementById('userName').value.trim();
             if(!name) return alert("Введите имя!");
+
+            document.getElementById('sendBtn').innerText = "ОТПРАВКА...";
             
-            const conn = peer.connect(TARGET_ID);
+            const conn = peer.connect(TARGET_SCREEN_ID);
+            
             conn.on('open', () => {
-                conn.send({ type: 'REGISTER', name: name, photo: photoBase64 });
+                conn.send({ 
+                    type: 'REGISTER', 
+                    name: name, 
+                    photo: photoBase64 
+                });
+                
                 document.getElementById('reg-form').style.display = "none";
                 document.getElementById('status').style.display = "block";
+            });
+
+            conn.on('error', (err) => {
+                alert("Ошибка! Проверьте, открыт ли экран лотереи у Ердаулета.");
+                document.getElementById('sendBtn').innerText = "ОТПРАВИТЬ ЕРДАУЛЕТУ 🚀";
             });
         }
     </script>
